@@ -1,7 +1,5 @@
 """Memória simulada: o estado e os métodos pedidos no enunciado."""
 
-import copy
-
 import formatacao
 from algoritmos import ESTRATEGIAS
 from bloco import Bloco, FitAlg, Option
@@ -129,7 +127,7 @@ class Memoria:
             "bytes_movidos": escolhida["bytes_movidos"],
             # Custo e layout das três opções, para a tela comparar.
             "opcoes": {op.value: {"k": c["k"],
-                                  "movidos": len(c["movidos"]),
+                                  "blocos_movidos": len(c["movidos"]),
                                   "bytes_movidos": c["bytes_movidos"],
                                   "blocos": [_resumo(b) for b in c["blocos"]]}
                        for op, c in opcoes.items()},
@@ -140,10 +138,6 @@ class Memoria:
     def buracos(self) -> list[Bloco]:
         """Buracos livres em ordem de endereço."""
         return [b for b in self.blocos if b.livre]
-
-    def copiar(self) -> "Memoria":
-        """Cópia independente do estado (retrato usado pelo botão Voltar)."""
-        return copy.deepcopy(self)
 
     def _exigir_init(self) -> None:
         if self.tamanho == 0:

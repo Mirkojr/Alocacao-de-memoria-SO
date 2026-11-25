@@ -21,7 +21,8 @@ class Comando:
 
 def interpretar(linha: str) -> Comando | None:
     """Separa a linha em nome e argumentos. Linha vazia ou comentário (#) devolve None."""
-    texto = linha.strip()
+    # Remove o BOM invisível que alguns editores (ex.: Bloco de Notas) põem no início do arquivo.
+    texto = linha.replace("﻿", "").strip()
     if not texto or texto.startswith("#"):
         return None
     nome, *args = texto.split()

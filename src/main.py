@@ -60,7 +60,11 @@ def main() -> None:
         caminho = Path(sys.argv[1])
         if not caminho.is_file():
             sys.exit(f"Erro: roteiro não encontrado: {caminho}")
-        rodar_roteiro(memoria, caminho.read_text(encoding="utf-8").splitlines())
+        try:
+            texto = caminho.read_text(encoding="utf-8-sig")   # aceita UTF-8 com ou sem BOM
+        except UnicodeDecodeError:
+            sys.exit(f"Erro: salve o roteiro em UTF-8: {caminho}")
+        rodar_roteiro(memoria, texto.splitlines())
     elif not sys.stdin.isatty():           # entrada redirecionada: python src/main.py < roteiro
         rodar_roteiro(memoria, sys.stdin)
     else:
