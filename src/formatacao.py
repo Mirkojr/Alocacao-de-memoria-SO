@@ -1,4 +1,4 @@
-"""Textos no formato do enunciado: mapa (show), estatísticas (stats) e mensagens de erro."""
+"""Textos no formato do enunciado: mapa (show), estatísticas (stats), defrag e erros."""
 
 # ---- Mensagens de erro ----
 
@@ -24,8 +24,21 @@ def erro_algoritmo_invalido(nome) -> str:
     return f"Erro: algoritmo inválido: {nome} (use first, best, worst ou next)"
 
 
+def erro_opcao_invalida(nome) -> str:
+    return f"Erro: opção de defrag inválida: {nome} (use init, end ou opt)"
+
+
 def erro_comando_invalido(linha: str) -> str:
     return f"Erro: comando inválido: {linha}"
+
+
+# ---- defrag ----
+
+def formatar_defrag(evento: dict) -> str:
+    """Ex.: Defrag OPT: 1 bloco(s) movido(s), 6 bytes deslocados"""
+    return (f"Defrag {evento['opcao'].upper()}: "
+            f"{len(evento['movidos'])} bloco(s) movido(s), "
+            f"{evento['bytes_movidos']} bytes deslocados")
 
 
 # ---- show e stats ----

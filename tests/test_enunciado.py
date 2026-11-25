@@ -9,7 +9,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from bloco import FitAlg  # noqa: E402
+from bloco import FitAlg, Option  # noqa: E402
+from formatacao import formatar_defrag  # noqa: E402
 from memoria import ErroSimulador, Memoria  # noqa: E402
 
 
@@ -87,6 +88,76 @@ class TestExemplosDoEnunciado(unittest.TestCase):
         evento = m.alloc(6, FitAlg.NEXT)
         self.assertEqual([b["inicio"] for b in evento["examinados"]], [28, 0])
         self.assertEqual(evento["escolhido"]["inicio"], 0)
+
+
+class TestDefrag(unittest.TestCase):
+
+    def memoria_do_exemplo(self) -> Memoria:
+        """Exemplo do enunciado: id=1 @0 +10B e id=3 @18 +6B em 64 bytes."""
+        m = Memoria()
+        m.init(64)
+        for tamanho in (10, 8, 6):
+            m.alloc(tamanho, FitAlg.FIRST)
+        m.free_id(2)
+        return m
+
+    def test_tabela_do_defrag(self):
+        """INIT 2 blocos/16 B, END 1/6 B, OPT 1/6 B com k=2 (empate com k=1)."""
+        casos = [
+            # (opção, blocos movidos, bytes deslocados, layout final)
+            (Option.INIT, 2, 16, [(0, 48, None), (48, 10, 1), (58, 6, 3)]),
+            (Option.END, 1, 6, [(0, 10, 1), (10, 6, 3), (16, 48, None)]),
+            (Option.OPT, 1, 6, [(0, 10, 1), (10, 6, 3), (16, 48, None)]),
+        ]
+        for opcao, movidos, bytes_movidos, esperado in casos:
+            with self.subTest(opcao=opcao):
+                m = self.memoria_do_exemplo()
+                evento = m.defrag(opcao)
+                self.assertEqual(len(evento["movidos"]), movidos)
+                self.assertEqual(evento["bytes_movidos"], bytes_movidos)
+                self.assertEqual(layout(m), esperado)
+
+        m = self.memoria_do_exemplo()
+        self.assertEqual(m.defrag(Option.OPT)["k"], 2)
+
+    def test_opt_pode_deixar_o_buraco_no_meio(self):
+        """id=1 @0, id=3 @8 e id=5 @28: mover só o id=3 (4 B) é o mais barato."""
+        m = Memoria()
+        m.init(32)
+        for tamanho in (4, 4, 4, 16, 4):
+            m.alloc(tamanho, FitAlg.FIRST)
+        m.free_id(2)
+        m.free_id(4)
+        evento = m.defrag(Option.OPT)
+        self.assertEqual(layout(m), [(0, 4, 1), (4, 4, 3), (8, 20, None), (28, 4, 5)])
+        self.assertEqual(evento["movidos"], [{"id": 3, "de": 8, "para": 4, "tamanho": 4}])
+
+    def test_defrag_zera_o_ponteiro_e_mantem_ids(self):
+        m = self.memoria_do_exemplo()
+        m.defrag(Option.INIT)
+        self.assertEqual(m.ponteiro, 0)
+        self.assertEqual([b.id for b in m.blocos if not b.livre], [1, 3])
+        self.assertEqual(m.alloc(4, FitAlg.FIRST)["bloco"]["id"], 4)
+
+    def test_defrag_sem_buracos_nao_move_nada(self):
+        m = Memoria()
+        m.init(8)
+        m.alloc(8, FitAlg.FIRST)
+        evento = m.defrag(Option.OPT)
+        self.assertEqual((evento["movidos"], layout(m)), ([], [(0, 8, 1)]))
+
+    def test_defrag_com_memoria_vazia(self):
+        m = Memoria()
+        m.init(8)
+        m.defrag(Option.END)
+        self.assertEqual(layout(m), [(0, 8, None)])
+
+    def test_texto_do_defrag_e_opcao_invalida(self):
+        m = self.memoria_do_exemplo()
+        self.assertEqual(formatar_defrag(m.defrag("opt")),
+                         "Defrag OPT: 1 bloco(s) movido(s), 6 bytes deslocados")
+        with self.assertRaises(ErroSimulador):
+            m.defrag("meio")
 
 
 class TestAlgoritmos(unittest.TestCase):

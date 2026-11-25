@@ -4,7 +4,8 @@ import copy
 
 import formatacao
 from algoritmos import ESTRATEGIAS
-from bloco import Bloco, FitAlg
+from bloco import Bloco, FitAlg, Option
+from defrag import calcular_opcoes
 
 
 class ErroSimulador(Exception):
@@ -106,6 +107,32 @@ class Memoria:
             "buracos": len(buracos),
             "maior_buraco": max((b.tamanho for b in buracos), default=0),
             "uso": 100 * ocupado / self.tamanho,
+        }
+
+    def defrag(self, option: Option) -> dict:
+        """Compacta a memória com a opção INIT, END ou OPT."""
+        self._exigir_init()
+        try:
+            option = Option(option)       # aceita Option.OPT ou o texto "opt"
+        except ValueError:
+            raise ErroSimulador(formatacao.erro_opcao_invalida(option)) from None
+
+        opcoes = calcular_opcoes(self.blocos, self.tamanho)
+        escolhida = opcoes[option]
+        self.blocos = escolhida["blocos"]
+        self.ponteiro = 0                 # após o defrag, o ponteiro do Next Fit volta a 0
+        return {
+            "tipo": "defrag",
+            "opcao": option.value,
+            "k": escolhida["k"],
+            "movidos": escolhida["movidos"],
+            "bytes_movidos": escolhida["bytes_movidos"],
+            # Custo e layout das três opções, para a tela comparar.
+            "opcoes": {op.value: {"k": c["k"],
+                                  "movidos": len(c["movidos"]),
+                                  "bytes_movidos": c["bytes_movidos"],
+                                  "blocos": [_resumo(b) for b in c["blocos"]]}
+                       for op, c in opcoes.items()},
         }
 
     # ---- Apoio ----
