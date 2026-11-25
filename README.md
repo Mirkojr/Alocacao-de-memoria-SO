@@ -1,0 +1,1 @@
+# Alocacao-de-memoria-SO
