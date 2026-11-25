@@ -114,6 +114,20 @@ class TestAlgoritmos(unittest.TestCase):
         m = self.memoria_com_buracos()
         self.assertEqual(m.alloc(2, FitAlg.WORST)["bloco"]["inicio"], 0)
 
+    def test_worst_fit_falha_se_o_maior_nao_cabe(self):
+        m = self.memoria_com_buracos()
+        with self.assertRaises(ErroSimulador):
+            m.alloc(7, FitAlg.WORST)
+
+    def test_next_fit_com_ponteiro_no_fim_volta_ao_inicio(self):
+        m = Memoria()
+        m.init(16)
+        m.alloc(4, FitAlg.NEXT)
+        m.alloc(12, FitAlg.NEXT)      # ponteiro vai para 16, o fim da memória
+        m.free_id(1)
+        self.assertEqual(m.alloc(4, FitAlg.NEXT)["bloco"]["inicio"], 0)
+        self.assertEqual(m.ponteiro, 4)
+
     def test_empate_vale_o_menor_endereco(self):
         # Os buracos @0 e @18 têm 6 bytes: Best e Worst ficam com @0.
         m = self.memoria_com_buracos()
@@ -195,6 +209,13 @@ class TestCasosDeBorda(unittest.TestCase):
         m.init(8)
         with self.assertRaises(ErroSimulador):
             m.alloc(-1, FitAlg.FIRST)
+
+    def test_algoritmo_em_texto_e_algoritmo_invalido(self):
+        m = Memoria()
+        m.init(8)
+        self.assertEqual(m.alloc(4, "best")["algoritmo"], "best")
+        with self.assertRaises(ErroSimulador):
+            m.alloc(2, "fast")
 
     def test_show_com_id_de_dois_digitos(self):
         m = Memoria()

@@ -41,6 +41,10 @@ class Memoria:
         self._exigir_init()
         if tamanho <= 0:
             raise ErroSimulador(formatacao.ERRO_TAMANHO)
+        try:
+            alg = FitAlg(alg)             # aceita FitAlg.NEXT ou o texto "next"
+        except ValueError:
+            raise ErroSimulador(formatacao.erro_algoritmo_invalido(alg)) from None
 
         escolhido, examinados = ESTRATEGIAS[alg](self.buracos(), tamanho, self.ponteiro)
         if escolhido is None:

@@ -20,6 +20,10 @@ def erro_endereco_invalido(endereco: int) -> str:
     return f"Erro: endereço {endereco} não é o início de um bloco alocado"
 
 
+def erro_algoritmo_invalido(nome) -> str:
+    return f"Erro: algoritmo inválido: {nome} (use first, best, worst ou next)"
+
+
 def erro_comando_invalido(linha: str) -> str:
     return f"Erro: comando inválido: {linha}"
 
