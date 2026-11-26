@@ -18,7 +18,7 @@ const estado = {
 
 const painel = {
   contador: $("contador"), trilha: $("trilha-passos"), comando: $("comando"), explicacao: $("explicacao"),
-  mensagem: $("mensagem"), stats: $("stats"), ativos: $("ativos"),
+  mensagem: $("mensagem"), stats: $("stats"), resumo: $("resumo-stats"), ativos: $("ativos"),
   custo: $("custo"), custoOpcoes: $("custo-opcoes"),
 };
 
@@ -208,6 +208,21 @@ function minimizar(recolher) {
 }
 
 const alternarMinimizado = () => minimizar(!controle.classList.contains("minimizado"));
+
+// ---- Abas da coluna da direita (Passo atual, Estatísticas, Roteiro) ----
+
+/** Mostra o painel da aba clicada e esconde os outros. */
+function mostrarAba(aba) {
+  for (const outra of document.querySelectorAll('.abas [role="tab"]')) {
+    const ativa = outra === aba;
+    outra.setAttribute("aria-selected", String(ativa));
+    $(outra.getAttribute("aria-controls")).hidden = !ativa;
+  }
+}
+
+for (const aba of document.querySelectorAll('.abas [role="tab"]')) {
+  aba.addEventListener("click", () => mostrarAba(aba));
+}
 
 // ---- Eventos ----
 

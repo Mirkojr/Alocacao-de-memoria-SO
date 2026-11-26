@@ -30,8 +30,8 @@ export function iniciarEditor(executar) {
     atualizar();
   });
 
-  $("aba-passo").addEventListener("click", () => mostrarAba("passo"));
-  $("aba-roteiro").addEventListener("click", () => mostrarAba("roteiro"));
+  // Ao abrir a aba Roteiro, o cursor já vai para o texto.
+  $("aba-roteiro").addEventListener("click", () => campo.focus());
   atualizar();
 }
 
@@ -56,16 +56,6 @@ export function avisarNoEditor(texto) {
   const status = $("editor-status");
   status.dataset.estado = "erro";
   status.textContent = texto;
-}
-
-/** Mostra a aba "passo" ou "roteiro". */
-function mostrarAba(nome) {
-  const roteiro = nome === "roteiro";
-  $("aba-passo").setAttribute("aria-selected", String(!roteiro));
-  $("aba-roteiro").setAttribute("aria-selected", String(roteiro));
-  $("painel-passo").hidden = roteiro;
-  $("painel-roteiro").hidden = !roteiro;
-  if (roteiro) $("editor-texto").focus();
 }
 
 function executarTexto() {

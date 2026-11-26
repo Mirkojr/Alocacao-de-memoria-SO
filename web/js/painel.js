@@ -16,6 +16,7 @@ export function desenharPainel(el, passos, atual) {
   el.explicacao.innerHTML = explicar(passo, anterior);
   desenharMensagem(el.mensagem, passo.evento);
   desenharStats(el.stats, passo);
+  el.resumo.textContent = resumirStats(passo.stats);
   desenharAtivos(el.ativos, passo);
   desenharCustoDefrag(el.custo, el.custoOpcoes, passo.evento);
 }
@@ -27,6 +28,7 @@ export function limparPainel(el) {
   el.comando.textContent = "—";
   el.explicacao.textContent = "";
   el.stats.innerHTML = "";
+  el.resumo.textContent = "";
   el.ativos.innerHTML = "";
   el.custo.hidden = true;
 }
@@ -83,6 +85,13 @@ function desenharMensagem(caixa, evento) {
   const erro = evento?.erro;
   caixa.classList.toggle("erro", Boolean(erro));
   caixa.textContent = erro ?? "Sem erros neste passo.";
+}
+
+/** Uma linha com as cinco estatísticas, mostrada no cartão do passo atual. */
+function resumirStats(s) {
+  if (!s) return "";
+  return `${s.ocupado} B ocupados · ${s.livre} B livres · ${s.buracos} buraco(s) · `
+    + `maior buraco ${s.maior_buraco} B · uso ${s.uso.toFixed(2)}%`;
 }
 
 /** As cinco estatísticas do comando stats, mais o próximo id (mostra que o Voltar restaura os ids). */
