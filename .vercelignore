@@ -1,0 +1,8 @@
+tests/
+docs/
+.git/
+.claude/
+.env*
+.vercel/
+__pycache__/
+*.pdf
