@@ -178,10 +178,10 @@ Todas ficam em `formatacao.py`.
 
 | Módulo | Função |
 |---|---|
-| `main.js` | Único lugar com estado: a lista de passos e o passo atual. Avançar, Voltar, Reproduzir, Pausar, Reiniciar e o clique numa linha da pilha (ir direto a um passo) só mudam o índice e redesenham. |
+| `main.js` | Único lugar com estado: a lista de passos e o passo atual. Avançar, Voltar, Reproduzir, Pausar, Reiniciar e o clique numa linha da pilha (ir direto a um passo) só mudam o índice e redesenham. Também troca as abas da coluna da direita (Passo atual, Estatísticas e Roteiro). |
 | `api.js` | Lê o arquivo escolhido e conversa com o servidor. |
 | `historico.js` | Pilha de barras no tempo, com escala de endereços, destaques do passo, setas do defrag e marca do ponteiro. |
-| `painel.js` | Passo atual com explicação, mensagem de erro, estatísticas, blocos ativos e custo do defrag. |
+| `painel.js` | Aba Passo atual (explicação com um resumo das estatísticas, mensagem de erro, blocos ativos e custo do defrag) e aba Estatísticas (as cinco métricas do `stats` e o próximo id). |
 | `editor.js` | Aba "Roteiro": mostra o texto em execução, permite editar e manda o texto novo para o servidor simular de novo. |
 
 Os efeitos visuais são discretos e só de CSS: cores que mudam suavemente, realce ao passar o mouse e um fade curto no passo atual quando o usuário muda de passo. Nada se desloca na tela, e com "reduzir movimento" ligado no sistema as transições não rodam.

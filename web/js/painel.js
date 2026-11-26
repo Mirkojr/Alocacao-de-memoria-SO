@@ -27,7 +27,7 @@ export function limparPainel(el) {
   el.trilha.innerHTML = "";
   el.comando.textContent = "—";
   el.explicacao.textContent = "";
-  el.stats.innerHTML = "";
+  el.stats.innerHTML = "<dt>Memória</dt><dd>nenhum roteiro carregado</dd>";
   el.resumo.textContent = "";
   el.ativos.innerHTML = "";
   el.custo.hidden = true;

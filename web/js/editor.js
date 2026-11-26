@@ -30,8 +30,6 @@ export function iniciarEditor(executar) {
     atualizar();
   });
 
-  // Ao abrir a aba Roteiro, o cursor já vai para o texto.
-  $("aba-roteiro").addEventListener("click", () => campo.focus());
   atualizar();
 }
 

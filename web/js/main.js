@@ -169,6 +169,8 @@ function mostrarFalha(texto) {
   render();
   painel.mensagem.classList.add("erro");
   painel.mensagem.textContent = texto;
+  // A mensagem fica na aba Passo atual; se a aba Estatísticas estiver aberta, troca para ela aparecer.
+  if ($("aba-stats").getAttribute("aria-selected") === "true") mostrarAba($("aba-passo"));
 }
 
 async function iniciar() {
@@ -211,18 +213,31 @@ const alternarMinimizado = () => minimizar(!controle.classList.contains("minimiz
 
 // ---- Abas da coluna da direita (Passo atual, Estatísticas, Roteiro) ----
 
-/** Mostra o painel da aba clicada e esconde os outros. */
-function mostrarAba(aba) {
-  for (const outra of document.querySelectorAll('.abas [role="tab"]')) {
+const abas = [...document.querySelectorAll('.abas [role="tab"]')];
+
+/** Mostra o painel da aba escolhida e esconde os outros. */
+function mostrarAba(aba, focarEditor = false) {
+  for (const outra of abas) {
     const ativa = outra === aba;
     outra.setAttribute("aria-selected", String(ativa));
     $(outra.getAttribute("aria-controls")).hidden = !ativa;
   }
+  // Clicando na aba Roteiro, o cursor já vai para o texto (depois de o painel aparecer).
+  if (focarEditor && aba.id === "aba-roteiro") $("editor-texto").focus();
 }
 
-for (const aba of document.querySelectorAll('.abas [role="tab"]')) {
-  aba.addEventListener("click", () => mostrarAba(aba));
-}
+for (const aba of abas) aba.addEventListener("click", () => mostrarAba(aba, true));
+
+// Com o foco numa aba, ← e → trocam de aba (padrão de abas), em vez de mudar o passo.
+document.querySelector(".abas").addEventListener("keydown", (evento) => {
+  if (evento.key !== "ArrowLeft" && evento.key !== "ArrowRight") return;
+  evento.preventDefault();
+  evento.stopPropagation();                      // não deixa o atalho global avançar/voltar
+  const atual = abas.indexOf(evento.target);
+  const proxima = abas[(atual + (evento.key === "ArrowRight" ? 1 : -1) + abas.length) % abas.length];
+  proxima.focus();
+  mostrarAba(proxima);
+});
 
 // ---- Eventos ----
 

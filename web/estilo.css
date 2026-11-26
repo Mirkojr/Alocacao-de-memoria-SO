@@ -183,7 +183,7 @@ button.cmd:not(:disabled):hover { box-shadow: none; }
 
 /* ---- Lateral ---- */
 
-/* Abas "Passo atual" e "Roteiro" */
+/* Abas "Passo atual", "Estatísticas" e "Roteiro" */
 .abas { display: flex; gap: 4px; border-bottom: 1.5px solid var(--texto); }
 .abas button {
   height: 40px; padding: 0 12px; margin-bottom: -1.5px;
