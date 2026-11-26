@@ -26,7 +26,8 @@ Rode os comandos a partir da pasta do projeto.
 |---|---|
 | Interativa (digite os comandos; `sair` encerra) | `python src/main.py` |
 | Executar um roteiro, mostrando cada comando | `python src/main.py roteiros/exemplo-nextfit.cmd` |
-| Executar pela entrada padrão (só as saídas, como no PDF) | `python src/main.py < roteiros/exemplo-sessao.cmd` |
+| Executar pela entrada padrão (só as saídas, como no PDF), no PowerShell | `Get-Content roteiros\exemplo-sessao.cmd \| python src/main.py` |
+| O mesmo no Prompt de Comando (cmd), Linux ou macOS | `python src/main.py < roteiros/exemplo-sessao.cmd` |
 
 ### Comandos
 

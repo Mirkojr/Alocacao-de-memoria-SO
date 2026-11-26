@@ -5,6 +5,7 @@ Uso:
     python src/main.py roteiros/exemplo.cmd   executa um roteiro, mostrando cada comando
     python src/main.py < roteiros/exemplo.cmd executa pela entrada padrão; imprime só as
                                               saídas, como a "Saída esperada" do enunciado
+    (no PowerShell, que não tem "<": Get-Content roteiros\\exemplo.cmd | python src/main.py)
 """
 
 import sys
