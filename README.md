@@ -15,7 +15,7 @@ As decisões de implementação estão em [DOCUMENTACAO.md](DOCUMENTACAO.md).
 
 ## Requisitos
 
-- Python 3.10 ou mais novo. Não há nada para instalar: só a biblioteca padrão.
+- Python 3.10 ou mais novo. Não há nada para instalar: só a biblioteca padrão. (No Linux e no macOS o comando pode ser `python3` em vez de `python`.)
 - Um navegador atual (Chrome, Edge ou Firefox) para a simulação visual. Funciona sem internet.
 
 ## Versão de terminal
