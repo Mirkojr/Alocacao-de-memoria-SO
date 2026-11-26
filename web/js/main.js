@@ -226,18 +226,8 @@ function mostrarAba(aba, focarEditor = false) {
   if (focarEditor && aba.id === "aba-roteiro") $("editor-texto").focus();
 }
 
+// As setas ← → continuam sempre voltando/avançando o passo, mesmo com o foco numa aba.
 for (const aba of abas) aba.addEventListener("click", () => mostrarAba(aba, true));
-
-// Com o foco numa aba, ← e → trocam de aba (padrão de abas), em vez de mudar o passo.
-document.querySelector(".abas").addEventListener("keydown", (evento) => {
-  if (evento.key !== "ArrowLeft" && evento.key !== "ArrowRight") return;
-  evento.preventDefault();
-  evento.stopPropagation();                      // não deixa o atalho global avançar/voltar
-  const atual = abas.indexOf(evento.target);
-  const proxima = abas[(atual + (evento.key === "ArrowRight" ? 1 : -1) + abas.length) % abas.length];
-  proxima.focus();
-  mostrarAba(proxima);
-});
 
 // ---- Eventos ----
 
