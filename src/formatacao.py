@@ -13,22 +13,27 @@ def erro_sem_espaco(pedido: int, livre: int, maior: int) -> str:
 
 
 def erro_id_inexistente(id_bloco: int) -> str:
+    """freeid com um id que não está alocado."""
     return f"Erro: não há bloco alocado com id {id_bloco}"
 
 
 def erro_endereco_invalido(endereco: int) -> str:
+    """freeaddr com um endereço que não é o início de um bloco alocado."""
     return f"Erro: endereço {endereco} não é o início de um bloco alocado"
 
 
 def erro_algoritmo_invalido(nome) -> str:
+    """alloc com algoritmo fora de first, best, worst e next."""
     return f"Erro: algoritmo inválido: {nome} (use first, best, worst ou next)"
 
 
 def erro_opcao_invalida(nome) -> str:
+    """defrag com opção fora de init, end e opt."""
     return f"Erro: opção de defrag inválida: {nome} (use init, end ou opt)"
 
 
 def erro_comando_invalido(linha: str) -> str:
+    """Comando desconhecido, com argumentos a mais/a menos ou número inválido."""
     return f"Erro: comando inválido: {linha}"
 
 

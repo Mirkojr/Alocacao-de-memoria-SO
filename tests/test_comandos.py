@@ -87,10 +87,12 @@ class TestCLI(unittest.TestCase):
         resultado = self.cli(str(RAIZ / "roteiros" / "exemplo-sessao.cmd"))
         self.assertEqual(resultado.stdout, self.saida_esperada_da_sessao())
 
-    def test_roteiro_pela_entrada_padrao(self):
+    def test_entrada_padrao_imprime_so_a_saida_esperada_do_pdf(self):
         texto = (RAIZ / "roteiros" / "exemplo-sessao.cmd").read_text(encoding="utf-8")
         resultado = self.cli(entrada=texto)
-        self.assertEqual(resultado.stdout, self.saida_esperada_da_sessao())
+        so_o_show = self.saida_esperada_da_sessao().split("> show\n")[1]
+        self.assertEqual(resultado.stdout, so_o_show)
+        self.assertTrue(resultado.stdout.startswith("Mapa de Memória (64 bytes)"))
 
     def test_roteiro_com_erro_imprime_a_mensagem(self):
         resultado = self.cli(str(RAIZ / "roteiros" / "exemplo-erro.cmd"))

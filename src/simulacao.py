@@ -17,7 +17,10 @@ def simular_roteiro(texto: str) -> dict:
     passos = [retrato(memoria, numero=0, evento=None)]
     for linha in texto.splitlines():
         comando = interpretar(linha)
-        if comando is None or comando.nome in IGNORADOS_NA_TELA:
+        if comando is None:
+            continue
+        # show/stats válidos são pulados; com argumentos ("show tudo") viram passo de erro, como na CLI.
+        if comando.nome in IGNORADOS_NA_TELA and not comando.args:
             continue
         evento = executar(memoria, comando)
         passos.append(retrato(memoria, numero=len(passos), evento=evento))

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alocação de Memória · Simulação passo a passo</title>
+<link rel="stylesheet" href="estilo.css">
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <h1>Gerência de Memória · Simulação passo a passo</h1>
+  <div class="roteiro">
+    <label for="exemplos">Exemplo</label>
+    <select id="exemplos">
+      <option value="">Escolha…</option>
+    </select>
+    <button id="btn-arquivo" type="button">Escolher arquivo…</button>
+    <input id="arquivo" type="file" accept=".cmd,.txt" class="oculto" tabindex="-1" aria-hidden="true">
+    <span id="nome-roteiro" class="nome-roteiro"></span>
+  </div>
+</header>
+
+<main class="conteudo">
+
+  <!-- Esquerda: uma linha por passo, como nos slides da aula -->
+  <section class="historico" aria-label="Histórico da memória">
+    <div class="cabecalho-historico">
+      <span>comando</span>
+      <div id="escala" class="escala" aria-hidden="true"></div>
+      <span>ponteiro</span>
+    </div>
+    <div id="historico" class="linhas"></div>
+    <p id="vazio" class="vazio">Escolha um roteiro de exemplo ou um arquivo <code>.cmd</code> para começar.</p>
+
+    <ul class="legenda">
+      <li><span class="amostra buraco"></span>buraco livre</li>
+      <li><span class="amostra bloco"></span>bloco (uma cor por id)</li>
+      <li><span class="amostra novo"></span>alocado neste passo</li>
+      <li><span class="amostra examinado"></span>buraco examinado</li>
+      <li><span class="amostra escolhido"></span>buraco escolhido</li>
+      <li><span class="amostra unido"></span>liberado / coalescência</li>
+      <li><span class="amostra movido"></span>movido pelo defrag</li>
+      <li><span class="amostra ponteiro"></span>ponteiro do Next Fit</li>
+    </ul>
+  </section>
+
+  <!-- Direita: duas abas, o passo atual e o texto do roteiro (para editar e executar de novo) -->
+  <aside class="lateral">
+    <div class="abas" role="tablist" aria-label="Painel lateral">
+      <button id="aba-passo" type="button" role="tab" aria-selected="true" aria-controls="painel-passo">Passo atual</button>
+      <button id="aba-roteiro" type="button" role="tab" aria-selected="false" aria-controls="painel-roteiro">
+        Roteiro<span id="marca-alterado" class="marca-alterado" title="Roteiro alterado, ainda não executado" hidden></span>
+      </button>
+    </div>
+
+    <div id="painel-passo" class="painel-aba" role="tabpanel" aria-labelledby="aba-passo">
+    <section class="cartao passo" aria-live="polite">
+      <span id="comando" class="comando-atual">—</span>
+      <p id="explicacao" class="explicacao"></p>
+    </section>
+
+    <section id="mensagem" class="mensagem" role="status"></section>
+
+    <section class="cartao">
+      <h2>Estatísticas</h2>
+      <dl id="stats" class="stats"></dl>
+    </section>
+
+    <section class="cartao">
+      <h2>Blocos ativos</h2>
+      <ul id="ativos" class="ativos"></ul>
+    </section>
+
+    <section id="custo" class="cartao" hidden>
+      <h2>Custo de cada opção de defrag</h2>
+      <div id="custo-opcoes" class="opcoes-defrag"></div>
+    </section>
+    </div>
+
+    <div id="painel-roteiro" class="painel-aba" role="tabpanel" aria-labelledby="aba-roteiro" hidden>
+      <p id="editor-status" class="editor-status"></p>
+      <div class="editor">
+        <div id="editor-linhas" class="editor-linhas" aria-hidden="true"></div>
+        <textarea id="editor-texto" spellcheck="false" wrap="off" aria-label="Texto do roteiro" aria-describedby="editor-dica"></textarea>
+      </div>
+      <p id="editor-dica" class="dica">Um comando por linha. Linhas que começam com # e os comandos show e stats não viram passo. Ctrl+Enter executa.</p>
+      <div class="editor-botoes">
+        <button id="btn-executar" type="button" class="primario">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg>Executar roteiro
+        </button>
+        <button id="btn-desfazer" type="button" title="Volta ao texto que está em execução">Desfazer alterações</button>
+      </div>
+      <p class="dica">Executar recomeça a simulação do passo 0 com o texto acima.</p>
+    </div>
+  </aside>
+</main>
+
+<!-- Controle de reprodução flutuando no rodapé, como num player de vídeo -->
+<section class="controle" aria-label="Controles da simulação">
+  <p id="aviso-intervalo" class="aviso" hidden>Use um número maior que zero no intervalo, como 0,5.</p>
+
+  <button id="btn-reiniciar" type="button" class="redondo sem-borda" aria-label="Reiniciar" title="Reiniciar (Home)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+  </button>
+  <button id="btn-voltar" type="button" class="redondo" aria-label="Voltar" title="Voltar um passo (←)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+  <button id="btn-reproduzir" type="button" class="redondo principal" aria-label="Reproduzir" title="Reproduzir (espaço)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="cheio"><path d="M8 4v16l13-8z"/></svg>
+  </button>
+  <button id="btn-pausar" type="button" class="redondo" aria-label="Pausar" title="Pausar (espaço)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="cheio"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+  </button>
+  <button id="btn-avancar" type="button" class="redondo" aria-label="Avançar" title="Avançar um passo (→)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+  </button>
+
+  <span class="divisor" aria-hidden="true"></span>
+
+  <div class="progresso">
+    <span id="contador" class="contador" aria-live="polite">Passo 0 de 0</span>
+    <div id="trilha-passos" class="trilha-passos" aria-hidden="true"></div>
+  </div>
+
+  <span class="divisor" aria-hidden="true"></span>
+
+  <span class="intervalo">
+    <label for="intervalo">a cada</label>
+    <input id="intervalo" type="text" inputmode="decimal" value="1" aria-describedby="aviso-intervalo">
+    <span>s</span>
+  </span>
+
+  <!-- Minimizar: recolhe o controle para um botão pequeno no canto (os atalhos continuam valendo) -->
+  <button id="btn-minimizar" type="button" class="redondo sem-borda" aria-expanded="true"
+          aria-label="Minimizar controles" title="Minimizar controles (M)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+</section>
+
+</body>
+</html>

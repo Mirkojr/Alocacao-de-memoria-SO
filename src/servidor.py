@@ -37,12 +37,14 @@ class Manipulador(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(PASTA_WEB), **kwargs)
 
     def do_GET(self):
+        """Lista de exemplos em /api/roteiros; qualquer outro caminho é arquivo de web/."""
         if self.path == "/api/roteiros":
             self.responder_json(200, listar_roteiros())
         else:
             super().do_GET()                     # arquivo estático de web/
 
     def do_POST(self):
+        """Recebe {"roteiro": texto} em /api/simular e devolve os passos simulados."""
         if self.path != "/api/simular":
             self.responder_json(404, {"erro": "Rota não encontrada."})
             return
@@ -69,6 +71,11 @@ class Manipulador(SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(corpo)))
         self.end_headers()
         self.wfile.write(corpo)
+
+    def end_headers(self):
+        """Pede ao navegador para sempre conferir se o arquivo mudou (evita tela desatualizada)."""
+        self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
 
     def log_message(self, formato, *args):
         """Não imprime uma linha por requisição."""
@@ -99,6 +106,7 @@ def criar_servidor(porta: int) -> ThreadingHTTPServer:
 
 
 def main() -> None:
+    """Abre o servidor, mostra o endereço e abre o navegador."""
     sys.stdout.reconfigure(encoding="utf-8")
     try:
         porta = int(sys.argv[1]) if len(sys.argv) > 1 else 8000

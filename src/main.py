@@ -2,8 +2,9 @@
 
 Uso:
     python src/main.py                        modo interativo: digite os comandos
-    python src/main.py roteiros/exemplo.cmd   executa um roteiro
-    python src/main.py < roteiros/exemplo.cmd o mesmo, lendo da entrada padrão
+    python src/main.py roteiros/exemplo.cmd   executa um roteiro, mostrando cada comando
+    python src/main.py < roteiros/exemplo.cmd executa pela entrada padrão; imprime só as
+                                              saídas, como a "Saída esperada" do enunciado
 """
 
 import sys
@@ -29,10 +30,10 @@ def rodar_linha(memoria: Memoria, linha: str, ecoar: bool) -> None:
         print(evento["saida"])
 
 
-def rodar_roteiro(memoria: Memoria, linhas: Iterable[str]) -> None:
+def rodar_roteiro(memoria: Memoria, linhas: Iterable[str], ecoar: bool) -> None:
     """Executa um roteiro inteiro, uma linha por vez."""
     for linha in linhas:
-        rodar_linha(memoria, linha, ecoar=True)
+        rodar_linha(memoria, linha, ecoar)
 
 
 def modo_interativo(memoria: Memoria) -> None:
@@ -51,6 +52,7 @@ def modo_interativo(memoria: Memoria) -> None:
 
 
 def main() -> None:
+    """Escolhe o modo: roteiro por argumento, entrada redirecionada ou interativo."""
     # Acentos corretos no terminal do Windows e em saída redirecionada.
     for fluxo in (sys.stdin, sys.stdout, sys.stderr):
         fluxo.reconfigure(encoding="utf-8")
@@ -64,9 +66,9 @@ def main() -> None:
             texto = caminho.read_text(encoding="utf-8-sig")   # aceita UTF-8 com ou sem BOM
         except UnicodeDecodeError:
             sys.exit(f"Erro: salve o roteiro em UTF-8: {caminho}")
-        rodar_roteiro(memoria, texto.splitlines())
+        rodar_roteiro(memoria, texto.splitlines(), ecoar=True)
     elif not sys.stdin.isatty():           # entrada redirecionada: python src/main.py < roteiro
-        rodar_roteiro(memoria, sys.stdin)
+        rodar_roteiro(memoria, sys.stdin, ecoar=False)
     else:
         modo_interativo(memoria)
 

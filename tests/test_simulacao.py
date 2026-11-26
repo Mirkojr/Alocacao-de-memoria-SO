@@ -39,6 +39,10 @@ class TestSimulacao(unittest.TestCase):
         passos = simular_roteiro("# teste\n\ninit 8\nshow\nalloc 2 first\nstats\n")["passos"]
         self.assertEqual([p["comando"] for p in passos], [None, "init 8", "alloc 2 first"])
 
+    def test_show_ou_stats_com_argumento_viram_erro(self):
+        passos = simular_roteiro("init 8\nshow tudo")["passos"]
+        self.assertEqual(passos[2]["evento"]["erro"], "Erro: comando inválido: show tudo")
+
     def test_roteiro_do_next_fit(self):
         passos = simular_roteiro(roteiro("exemplo-nextfit.cmd"))["passos"]
         self.assertEqual(len(passos), 8)                      # passo 0 + 7 comandos

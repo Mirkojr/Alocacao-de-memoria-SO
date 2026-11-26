@@ -140,6 +140,7 @@ class Memoria:
         return [b for b in self.blocos if b.livre]
 
     def _exigir_init(self) -> None:
+        """Erro se ainda não houve init (init deve ser o primeiro comando)."""
         if self.tamanho == 0:
             raise ErroSimulador(formatacao.ERRO_SEM_INIT)
 

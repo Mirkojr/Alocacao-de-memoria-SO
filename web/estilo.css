@@ -1,0 +1,359 @@
+/* Tela da simulação passo a passo (opção C do protótipo: pilha de barras no tempo). */
+
+:root {
+  --texto: #1A1A1A;
+  --suave: #555555;
+  --linha: #E4E4E4;
+  --azul: #1F5A99;
+  --atual: #FFF6D6;
+  --erro-fundo: #FDECEC;
+  --erro: #B91C1C;
+  --buraco: #E6E6E6;
+  --roxo: #5B21B6;
+  --ambar: #B45309;
+  --verde: #15803D;
+  --mono: "Cascadia Mono", Consolas, "Courier New", monospace;
+}
+
+* { box-sizing: border-box; }
+
+/* Telas grandes (monitor ou TV da sala): amplia a página inteira por igual,
+   para não virar uma ilha pequena no meio da tela. */
+@media (min-width: 1800px) { :root { --escala: 1.2; } }
+@media (min-width: 2300px) { :root { --escala: 1.5; } }
+@media (min-width: 3000px) { :root { --escala: 1.9; } }
+@media (min-width: 3600px) { :root { --escala: 2.3; } }
+
+body {
+  zoom: var(--escala, 1);
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  color: var(--texto);
+  background: #FFFFFF;
+}
+
+button, select, input { font: inherit; }
+[hidden] { display: none !important; }      /* vence o display: flex dos cartões */
+:focus-visible { outline: 3px solid #93C5FD; outline-offset: 2px; }
+code { font-family: var(--mono); }
+
+/* ---- Cabeçalho ---- */
+
+.topo {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  align-items: center; justify-content: space-between;
+  /* alinha com o conteúdo (máx. 1400px centralizado), mantendo a linha de baixo na largura toda */
+  padding: 16px max(32px, calc((100% - 1400px) / 2 + 32px));
+  border-bottom: 1px solid var(--linha);
+}
+.topo h1 { margin: 0; font-size: 22px; color: var(--azul); }
+.roteiro { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+.nome-roteiro { font-family: var(--mono); font-size: 13px; color: #444444; }
+.oculto { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+select, button {
+  height: 44px; border: 1.5px solid var(--texto); border-radius: 6px;
+  background: #FFFFFF; color: var(--texto);
+}
+select { padding: 0 10px; }
+button { padding: 0 16px; font-weight: 600; cursor: pointer; }
+button:disabled { border-color: #CCCCCC; background: #F4F4F4; color: #8A8A8A; cursor: default; }
+button.primario { background: var(--azul); border-color: var(--azul); color: #FFFFFF; }
+button.primario:disabled { background: #F4F4F4; border-color: #CCCCCC; color: #8A8A8A; }
+
+/* ---- Layout ---- */
+
+.conteudo {
+  max-width: 1400px; margin: 0 auto; padding: 24px 32px;
+  display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start;
+}
+.historico { flex: 999 1 560px; min-width: 0; }   /* 560 px: duas colunas já cabem em 1024 px */
+.lateral { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* ---- Histórico: comando | barra | ponteiro ---- */
+
+.cabecalho-historico, .linha {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 110px;
+  column-gap: 16px;
+}
+.cabecalho-historico { font-size: 12px; font-weight: 600; color: var(--suave); align-items: end; margin-bottom: 6px; }
+
+.escala { position: relative; height: 20px; font-family: var(--mono); font-size: 11px; font-weight: 400; }
+.escala span { position: absolute; bottom: 0; height: 18px; padding-left: 3px; border-left: 1px dotted #888888; }
+.escala span:last-child {
+  padding: 0 3px 0 0; border-left: 0; border-right: 1px dotted #888888;
+  transform: translateX(-100%);
+}
+
+.linhas { position: relative; max-height: calc(64vh / var(--escala, 1)); overflow-y: auto; }   /* relative: offsetTop das linhas */
+.linha { padding: 8px 0; border-radius: 6px; align-items: center; }
+.linha.atual { background: var(--atual); }
+.linha.atual.com-erro { background: var(--erro-fundo); }
+.linha.futura { color: #8A8A8A; }
+
+/* Clicar numa linha leva àquele passo (a linha atual não precisa) */
+.linha:not(.atual) { cursor: pointer; }
+
+/* Número + comando: é um botão (para o teclado), mas com cara de texto */
+button.cmd {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; height: auto; min-height: 28px; padding: 0 0 0 8px;
+  border: 0; border-radius: 6px; background: transparent; color: inherit;
+  font-family: var(--mono); font-size: 14px; font-weight: 400; text-align: left;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: inherit;
+}
+button.cmd:not(:disabled):hover { box-shadow: none; }
+.cmd .n { min-width: 2ch; text-align: right; color: #777777; }
+.cmd.falhou { color: var(--erro); }
+.linha.atual .cmd, .linha.atual .ptr { font-weight: 700; }
+.ptr { font-family: var(--mono); font-size: 13px; color: var(--roxo); }
+
+.trilho { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+/* Barra da memória: segmentos posicionados em % do tamanho total */
+.barra { position: relative; height: 32px; border: 1.5px solid var(--texto); background: var(--buraco); }
+.linha.atual .barra { height: 48px; }
+.barra.vazia { border: 1.5px dashed #AAAAAA; background: transparent; }
+.barra.mini { height: 14px; }
+
+.segmento {
+  position: absolute; top: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  overflow: hidden; font-size: 12px; font-weight: 700; line-height: 1.15;
+}
+.segmento:not(:first-child) { border-left: 1.5px solid var(--texto); }
+.segmento span { max-width: 100%; white-space: nowrap; overflow: hidden; padding: 0 2px; }
+.segmento .pos { font-family: var(--mono); font-size: 10px; font-weight: 400; }
+.linha.atual .segmento .pos { font-size: 11px; }
+.segmento.buraco { background: var(--buraco); color: #555555; font-weight: 500; }
+.barra.mini .segmento span { display: none; }
+
+.segmento.novo { box-shadow: inset 0 0 0 3px var(--texto); }
+.segmento.unido { box-shadow: inset 0 0 0 3px var(--azul); }
+.segmento.movido { box-shadow: inset 0 0 0 3px var(--roxo); }
+
+.marca-ponteiro { position: absolute; top: -6px; bottom: -6px; border-left: 2px solid var(--roxo); z-index: 2; }
+.marca-ponteiro::after {
+  content: "ptr"; position: absolute; top: -12px; left: 3px;
+  font-size: 10px; font-weight: 700; color: var(--roxo);
+}
+
+/* Faixa embaixo da barra: buracos examinados, escolhido, coalescência */
+.faixa { position: relative; height: 22px; }
+.marca {
+  position: absolute; top: 0; padding-top: 3px; border-top: 3px solid;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.marca.examinado { border-top-style: dashed; border-color: var(--ambar); color: #92400E; }
+.marca.escolhido { border-color: var(--verde); color: #166534; }
+.marca.uniao { border-color: var(--azul); color: var(--azul); }
+
+/* Setas do defrag: da posição antiga para a nova */
+.setas { position: relative; }
+.seta {
+  position: absolute; bottom: 0;
+  border: 2px dotted var(--roxo); border-bottom: 0; border-radius: 14px 14px 0 0;
+}
+.seta::after {
+  content: ""; position: absolute; bottom: -7px;
+  border: 6px solid transparent; border-top: 8px solid var(--roxo);
+}
+.seta.para-esquerda::after { left: -8px; }
+.seta.para-direita::after { right: -8px; }
+.seta .rotulo {
+  position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; font-weight: 700; color: var(--roxo); white-space: nowrap;
+}
+
+.erro-linha { font-family: var(--mono); font-size: 13px; color: #991B1B; }
+.vazio { color: var(--suave); padding: 24px 8px; }
+
+.legenda { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #333333; }
+.legenda li { display: inline-flex; gap: 6px; align-items: center; }
+.amostra { display: inline-block; width: 16px; height: 12px; border: 1.5px solid var(--texto); }
+.amostra.buraco { background: var(--buraco); }
+.amostra.bloco { background: #F26B6B; }
+.amostra.novo { border-width: 3px; }
+.amostra.examinado { height: 0; border: 0; border-top: 3px dashed var(--ambar); }
+.amostra.escolhido { height: 0; border: 0; border-top: 3px solid var(--verde); }
+.amostra.unido { border: 3px solid var(--azul); }
+.amostra.movido { border: 3px solid var(--roxo); }
+.amostra.ponteiro { width: 0; height: 14px; border: 0; border-left: 2px solid var(--roxo); }
+
+/* ---- Lateral ---- */
+
+/* Abas "Passo atual" e "Roteiro" */
+.abas { display: flex; gap: 4px; border-bottom: 1.5px solid var(--texto); }
+.abas button {
+  height: 40px; padding: 0 14px; margin-bottom: -1.5px;
+  border: 0; border-bottom: 3px solid transparent; border-radius: 0;
+  background: transparent; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.abas button[aria-selected="true"] { border-bottom-color: var(--azul); font-weight: 700; }
+.marca-alterado { width: 8px; height: 8px; border-radius: 50%; background: #D97706; }
+.painel-aba { display: flex; flex-direction: column; gap: 16px; }
+
+/* Editor do roteiro: números de linha + texto */
+.editor-status { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--suave); }
+.editor-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.editor-status[data-estado="alterado"] { color: var(--ambar); }
+.editor-status[data-estado="executado"] { color: var(--verde); }
+.editor-status[data-estado="erro"] { color: var(--erro); }
+
+.editor {
+  display: flex; height: max(300px, calc(46vh / var(--escala, 1)));
+  border: 1.5px solid var(--texto); border-radius: 8px; overflow: hidden; background: #FFFFFF;
+}
+.editor-linhas {
+  min-width: 2.5ch; padding: 10px 8px; overflow: hidden; white-space: pre;
+  background: #F4F4F4; border-right: 1px solid var(--linha);
+  font: 13px/22px var(--mono); color: #6B6B6B; text-align: right;
+}
+.editor textarea {
+  flex: 1; min-width: 0; padding: 10px; border: 0; resize: none;
+  font: 13px/22px var(--mono); color: var(--texto); white-space: pre; overflow: auto;
+}
+.editor textarea:focus-visible { outline-offset: -3px; }
+.editor-botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.editor-botoes button { flex: 1 1 auto; padding: 0 12px; white-space: nowrap; }
+.editor-botoes .primario { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.editor-botoes svg { width: 14px; height: 14px; fill: currentColor; }
+.dica { margin: 0; font-size: 12px; line-height: 1.5; color: var(--suave); }
+
+.cartao { border: 1px solid var(--linha); border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
+.cartao.passo { border: 1.5px solid var(--texto); }
+.cartao h2 { margin: 0 0 6px; font-size: 15px; color: var(--azul); }
+.comando-atual { font-family: var(--mono); font-size: 24px; font-weight: 600; overflow-wrap: anywhere; }
+.explicacao { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: #333333; }
+
+.mensagem { border: 1px dashed #BBBBBB; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #444444; }
+.mensagem.erro { border: 1px solid #F3B4B4; background: var(--erro-fundo); color: #7F1D1D; font-family: var(--mono); }
+
+.stats { margin: 0; display: grid; grid-template-columns: 1fr auto; row-gap: 8px; font-size: 14px; }
+.stats dt { color: #444444; }
+.stats dd { margin: 0; text-align: right; font-family: var(--mono); font-weight: 600; }
+
+.ativos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 13px; }
+.ativos li { display: flex; align-items: center; gap: 8px; }
+.ativos .cor { width: 12px; height: 12px; border: 1px solid var(--texto); }
+
+.opcoes-defrag { display: flex; flex-direction: column; gap: 10px; }
+.opcao-defrag { border: 1px solid var(--linha); border-radius: 6px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.opcao-defrag.escolhida { border: 2px solid var(--texto); background: var(--atual); }
+.opcao-defrag .titulo { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.opcao-defrag .titulo b { font-family: var(--mono); }
+.opcao-defrag .nota { font-size: 12px; color: #444444; }
+
+/* ---- Controle flutuante: pílula no rodapé, sempre à vista ---- */
+
+body { padding-bottom: 72px; }      /* espaço para o controle não cobrir o fim da página */
+
+.controle {
+  position: fixed; left: 50%; bottom: 14px; z-index: 10;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 6px 4px 8px;
+  background: #FFFFFF; border: 1.5px solid var(--texto); border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(26, 26, 26, 0.18);
+  white-space: nowrap;
+}
+.controle button.redondo {
+  width: 32px; height: 32px; padding: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.controle button.sem-borda { border-color: transparent; background: transparent; }
+.controle button.principal { width: 38px; height: 38px; border: 0; background: var(--azul); color: #FFFFFF; }
+.controle button.redondo:disabled { border-color: #CCCCCC; background: #F4F4F4; color: #8A8A8A; }
+.controle button.sem-borda:disabled { border-color: transparent; background: transparent; color: #B0B0B0; }
+.controle button.principal:disabled { border: 1.5px solid #CCCCCC; }
+
+.controle svg {
+  width: 15px; height: 15px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+}
+.controle svg.cheio { fill: currentColor; stroke: none; }
+.controle .principal svg { width: 16px; height: 16px; }
+.divisor { width: 1px; height: 22px; margin: 0 5px; background: #D0D0D0; }
+
+/* Passo X de N com uma marca por passo: preenchida até o passo atual */
+.progresso { width: 88px; display: flex; flex-direction: column; gap: 4px; }
+.contador { font-size: 12px; font-weight: 700; }
+.trilha-passos { display: flex; gap: 2px; height: 4px; }
+.trilha-passos span { flex: 1; min-width: 1px; border-radius: 2px; background: var(--linha); }
+.trilha-passos .feito { background: #9DB5D3; }
+.trilha-passos .agora { background: var(--azul); }
+
+.intervalo { display: inline-flex; align-items: center; gap: 4px; padding-right: 4px; font-size: 12px; color: var(--suave); }
+.intervalo input {
+  width: 36px; height: 28px; border: 1.5px solid var(--texto); border-radius: 999px;
+  text-align: center; font-family: var(--mono); font-size: 12px; color: var(--texto);
+}
+.intervalo input[aria-invalid="true"] { border-color: var(--erro); }
+
+/* Minimizado: só o botão de mostrar e o "Passo X de N", no canto direito */
+.controle.minimizado { left: auto; right: 16px; transform: none; padding: 4px 4px 4px 12px; }
+.controle.minimizado .redondo:not(#btn-minimizar),
+.controle.minimizado .divisor,
+.controle.minimizado .intervalo,
+.controle.minimizado .trilha-passos { display: none; }
+.controle.minimizado .progresso { width: auto; }
+.controle.minimizado #btn-minimizar svg { transform: rotate(180deg); }   /* seta para cima: mostrar */
+
+/* Aviso de intervalo inválido: um balão logo acima do controle */
+.aviso {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  margin: 0; padding: 6px 10px; border: 1px solid #F3B4B4; border-radius: 6px;
+  background: var(--erro-fundo); color: #7F1D1D; font-size: 12px; white-space: nowrap;
+}
+
+/* ---- Efeitos sutis: transições suaves e realce ao passar o mouse, sem nada se mexendo ----
+   Quem pede menos movimento no sistema não vê as transições. */
+
+@media (prefers-reduced-motion: no-preference) {
+  button, select, input, .abas button, .segmento, .linha {
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease,
+                box-shadow 0.18s ease, filter 0.18s ease;
+  }
+  /* Ao mudar de passo, o destaque do passo atual e as marcas entram com um fade curto */
+  .linhas.animar .linha.atual { animation: esmaecer-fundo 0.25s ease-out; }
+  .linhas.animar .linha.atual .faixa,
+  .linhas.animar .linha.atual .setas,
+  .linhas.animar .linha.atual .erro-linha { animation: esmaecer 0.3s ease-out both; }
+}
+
+@keyframes esmaecer-fundo { from { background-color: transparent; } }
+@keyframes esmaecer { from { opacity: 0; } }
+
+/* Realce ao passar o mouse */
+.linha:not(.atual):hover { background: #F4F4F1; }
+.segmento:hover { filter: brightness(1.07); }
+button:not(:disabled):hover { box-shadow: 0 1px 4px rgba(26, 26, 26, 0.16); }
+.controle button.redondo:not(:disabled):not(.principal):hover { background: #EEF3F9; box-shadow: none; }
+.controle button.principal:not(:disabled):hover,
+button.primario:not(:disabled):hover { background: #194B80; }
+.abas button:not([aria-selected="true"]):hover { color: var(--azul); box-shadow: none; }
+
+/* ---- Telas estreitas ---- */
+
+@media (max-width: 1200px) {
+  .cabecalho-historico, .linha { grid-template-columns: 150px minmax(0, 1fr) 96px; column-gap: 12px; }
+}
+
+@media (max-width: 700px) {
+  .topo, .conteudo { padding: 16px; }
+  .cabecalho-historico, .linha { grid-template-columns: 110px minmax(0, 1fr) 64px; column-gap: 8px; }
+  .cmd { font-size: 12px; }
+}
+
+/* No celular a pílula não cabe numa linha: vira uma faixa no rodapé que quebra em duas */
+@media (max-width: 480px) {
+  body { padding-bottom: 112px; }
+  .controle {
+    left: 8px; right: 8px; transform: none;
+    flex-wrap: wrap; justify-content: center; border-radius: 18px;
+  }
+  .controle.minimizado { left: auto; right: 8px; border-radius: 999px; }
+  .divisor { display: none; }
+}
