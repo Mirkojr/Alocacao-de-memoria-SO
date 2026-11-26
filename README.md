@@ -2,10 +2,14 @@
 
 Atividade prática de Sistemas Operacionais (UFC). O simulador mostra como o sistema operacional aloca e libera blocos de memória com **First Fit, Best Fit, Worst Fit e Next Fit**, calcula a fragmentação externa e desfragmenta a memória (**INIT, END e OPT**).
 
+**Simulação visual online:** https://alocacao-de-memoria-so.vercel.app
+
+![Simulação passo a passo do exemplo do Next Fit: no passo 7 a busca começa no ponteiro @28, o buraco @28 não comporta 6 bytes e a busca volta ao endereço 0](docs/tela-simulacao.png)
+
 São duas formas de uso, com o mesmo núcleo em Python:
 
 - **Versão de terminal (CLI):** os comandos do enunciado, com a saída no formato do PDF.
-- **Simulação visual:** uma página no navegador que executa um roteiro passo a passo.
+- **Simulação visual:** uma página no navegador que executa um roteiro passo a passo (também publicada no link acima).
 
 As decisões de implementação estão em [DOCUMENTACAO.md](DOCUMENTACAO.md).
 
